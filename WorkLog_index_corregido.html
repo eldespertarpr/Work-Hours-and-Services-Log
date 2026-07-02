@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Work Log" />
+  <title>Work Hours and Services Log</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --line:#d1d5db;
+      --soft:#f8fafc;
+      --accent:#1d4ed8;
+      --danger:#dc2626;
+      --good:#166534;
+      --warn:#92400e;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(135deg,#0f172a,#1e293b);
+      color:var(--ink);
+      padding:14px;
+    }
+    .app{max-width:1100px;margin:0 auto}
+    .topbar{color:#fff;margin-bottom:12px}
+    .topbar h1{margin:0;font-size:1.45rem;line-height:1.1;letter-spacing:.02em}
+    .topbar p{margin:5px 0 0;color:#cbd5e1;font-size:.9rem}
+    .card{
+      background:var(--card);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 14px 40px rgba(0,0,0,.25);
+    }
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab-btn{
+      border:0;border-radius:999px;padding:10px 14px;font-weight:800;cursor:pointer;
+      background:#e5e7eb;color:#111827;
+    }
+    .tab-btn.active{background:var(--accent);color:#fff}
+    .tab{display:none}
+    .tab.active{display:block}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    label{font-size:.78rem;color:#374151;font-weight:800;display:block;margin-bottom:5px}
+    input, textarea, select{
+      width:100%;border:1px solid var(--line);border-radius:10px;
+      padding:10px 11px;font-size:1rem;background:#fff;color:var(--ink);
+    }
+    textarea{min-height:94px;resize:vertical;line-height:1.35}
+    .section-title{
+      margin:16px 0 8px;font-size:1rem;font-weight:900;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+    }
+    .hint{font-size:.78rem;color:var(--muted);font-weight:500}
+    .btns{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+    button{
+      border:0;border-radius:999px;padding:10px 14px;font-weight:800;
+      cursor:pointer;font-size:.95rem;
+    }
+    .primary{background:var(--accent);color:#fff}
+    .secondary{background:#e5e7eb;color:#111827}
+    .success{background:#dcfce7;color:#166534}
+    .danger{background:#fee2e2;color:#991b1b}
+    .mini{padding:7px 10px;border-radius:8px;font-size:.82rem}
+    .entry-card{
+      border:1px solid #e5e7eb;background:#f9fafb;border-radius:16px;
+      padding:12px;margin-bottom:12px;
+    }
+    .entry-head{
+      display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px;
+    }
+    .entry-head strong{color:#111827}
+    .checkline{
+      display:flex;align-items:center;gap:8px;padding:8px 0;
+      font-size:.9rem;color:#374151;font-weight:700;
+    }
+    .checkline input{width:auto}
+    .calculated{
+      background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:10px;
+      color:#1e3a8a;font-weight:900;text-align:center;
+    }
+    .summary-boxes{
+      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;
+    }
+    .summary-box{
+      background:var(--soft);border:1px solid #e5e7eb;border-radius:14px;padding:12px;
+    }
+    .summary-box span{display:block;color:var(--muted);font-size:.78rem;font-weight:800}
+    .summary-box strong{display:block;margin-top:4px;font-size:1.25rem;text-align:right}
+    .print-sheet{
+      background:#fff;color:#000;border:1px solid #d1d5db;padding:18px;margin-top:10px;
+      overflow-x:auto;
+    }
+    .print-title{
+      text-align:center;color:#1e3a8a;font-weight:900;font-size:1.45rem;
+      letter-spacing:.08em;margin:0 0 6px;text-transform:uppercase;
+    }
+    .print-info{
+      font-size:.95rem;margin-bottom:10px;line-height:1.35;
+    }
+    .print-table{
+      width:100%;border-collapse:collapse;font-size:.86rem;
+    }
+    .print-table th,.print-table td{
+      border:1px solid #111;padding:6px;vertical-align:top;
+    }
+    .print-table th{
+      background:#e5e7eb;text-align:center;font-weight:900;
+    }
+    .date-col{width:12%}
+    .time-col{width:12%;text-align:center}
+    .hours-col{width:9%;text-align:center}
+    .work-col{width:55%}
+    .total-row{
+      margin-top:10px;display:grid;grid-template-columns:250px 160px;max-width:430px;
+    }
+    .total-row div{
+      border:1px solid #111;padding:8px;font-weight:900;text-align:center;
+    }
+    .notes-print{
+      margin-top:10px;display:grid;grid-template-columns:1fr 2fr;gap:20px;align-items:start;
+    }
+    .notes-print .notes-box{
+      border:0;padding:0;font-size:.88rem;line-height:1.35;
+    }
+    .signature-print{
+      margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:38px;
+      font-size:.9rem;
+    }
+    .sigline{
+      border-top:1px solid #111;padding-top:6px;
+    }
+    .notice{
+      margin-top:12px;background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;
+      padding:10px 12px;border-radius:12px;font-size:.9rem;
+    }
+    @media(max-width:760px){
+      body{padding:10px}
+      .grid,.grid-3,.summary-boxes{grid-template-columns:1fr}
+      .card{padding:14px;border-radius:16px}
+      .entry-head{align-items:flex-start}
+      .print-sheet{padding:10px}
+      .print-table{font-size:.78rem}
+      .notes-print{grid-template-columns:1fr}
+    }
+    @media print{
+      body{background:#fff;padding:0}
+      .topbar,.tabs,.tab:not(#printTab),.no-print{display:none !important}
+      .app{max-width:none;margin:0}
+      .card{box-shadow:none;border-radius:0;padding:0}
+      #printTab{display:block !important}
+      .print-sheet{border:0;margin:0;padding:0;overflow:visible}
+      .print-title{font-size:22pt}
+      .print-info{font-size:11pt}
+      .print-table{font-size:9.3pt}
+      .print-table th,.print-table td{padding:5px}
+      .notice{display:none}
+      @page{size:letter landscape;margin:0.35in}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <h1>Work Hours and Services Log</h1>
+      <p>Track work days, schedules, services performed, total hours, and print a formal log.</p>
+    </div>
+
+    <div class="card">
+      <div class="tabs no-print">
+        <button class="tab-btn active" onclick="openTab('infoTab', this)">Info</button>
+        <button class="tab-btn" onclick="openTab('entriesTab', this)">Entries</button>
+        <button class="tab-btn" onclick="openTab('notesTab', this)">Notes</button>
+        <button class="tab-btn" onclick="openTab('summaryTab', this)">Summary</button>
+        <button class="tab-btn" onclick="openTab('printTab', this)">Print View</button>
+      </div>
+
+      <section id="infoTab" class="tab active">
+        <div class="section-title">Worker and Period Information</div>
+        <div class="grid">
+          <div>
+            <label>Name</label>
+            <input id="workerName" placeholder="Worker name" />
+          </div>
+          <div>
+            <label>Client / Organization</label>
+            <input id="clientName" placeholder="Client or organization name" />
+          </div>
+          <div>
+            <label>Period From</label>
+            <input id="periodFrom" type="date" />
+          </div>
+          <div>
+            <label>Period To</label>
+            <input id="periodTo" type="date" />
+          </div>
+          <div>
+            <label>Log Number</label>
+            <input id="logNumber" placeholder="Example: LOG-001" />
+          </div>
+          <div>
+            <label>Prepared Date</label>
+            <input id="preparedDate" type="date" />
+          </div>
+        </div>
+        <div class="btns">
+          <button class="secondary" onclick="saveData(true)">Save</button>
+          <button class="primary" onclick="openTabById('entriesTab')">Next: Entries</button>
+        </div>
+      </section>
+
+      <section id="entriesTab" class="tab">
+        <div class="section-title">
+          <span>Work Day Entries</span>
+          <span class="hint">Hours are calculated from start and end time.</span>
+        </div>
+        <div id="entries"></div>
+        <div class="btns">
+          <button class="primary" onclick="addEntry()">+ Add Work Day</button>
+          <button class="secondary" onclick="duplicateLastEntry()">Duplicate Previous Day</button>
+          <button class="secondary" onclick="saveData(true)">Save</button>
+          <button class="success" onclick="preparePrint()">Update Print View</button>
+        </div>
+      </section>
+
+      <section id="notesTab" class="tab">
+        <div class="section-title">General Notes and Certification</div>
+        <div class="grid">
+          <div>
+            <label>General Notes</label>
+            <textarea id="generalNotes" placeholder="Example: Some shifts extended into the following day due to overnight work activities."></textarea>
+          </div>
+          <div>
+            <label>Certification Statement</label>
+            <textarea id="certificationText">I certify that the information contained in this record is accurate and reflects the services provided during the period indicated.</textarea>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="secondary" onclick="saveData(true)">Save</button>
+          <button class="primary" onclick="openTabById('summaryTab')">Next: Summary</button>
+        </div>
+      </section>
+
+      <section id="summaryTab" class="tab">
+        <div class="section-title">Summary</div>
+        <div class="summary-boxes">
+          <div class="summary-box">
+            <span>Total Days Worked</span>
+            <strong id="summaryDays">0</strong>
+          </div>
+          <div class="summary-box">
+            <span>Total Hours Worked</span>
+            <strong id="summaryHours">0.00</strong>
+          </div>
+          <div class="summary-box">
+            <span>Period</span>
+            <strong id="summaryPeriod">&mdash;</strong>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="success" onclick="printLog()">Print / Save PDF</button>
+          <button class="secondary" onclick="newLog()">New Log</button>
+          <button class="danger" onclick="clearAll()">Clear All</button>
+        </div>
+        <div class="btns">
+          <button class="secondary" onclick="exportBackup()">Backup (Export JSON)</button>
+          <button class="secondary" onclick="document.getElementById('wlImportFile').click()">Import Backup</button>
+          <input id="wlImportFile" type="file" accept="application/json,.json" onchange="importBackup(event)" style="display:none">
+        </div>
+        <div class="notice">
+          This app saves data only on this device/browser. Print or save a PDF before clearing browser data.
+        </div>
+      </section>
+
+      <section id="printTab" class="tab">
+        <div class="btns no-print">
+          <button class="success" onclick="printLog()">Print / Save PDF</button>
+          <button class="secondary" onclick="preparePrint()">Refresh Print View</button>
+        </div>
+        <div class="print-sheet" id="printSheet">
+          <h2 class="print-title">WORK HOURS AND SERVICES LOG</h2>
+          <div class="print-info">
+            <div><strong>Name:</strong> <span id="pName"></span></div>
+            <div><strong>Client / Organization:</strong> <span id="pClient"></span></div>
+            <div><strong>Period:</strong> <span id="pPeriod"></span></div>
+            <div><strong>Log Number:</strong> <span id="pLogNumber"></span></div>
+          </div>
+
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th class="date-col">Date</th>
+                <th class="time-col">Start Time</th>
+                <th class="time-col">End Time</th>
+                <th class="hours-col">Hours</th>
+                <th class="work-col">Work Performed</th>
+              </tr>
+            </thead>
+            <tbody id="printRows"></tbody>
+          </table>
+
+          <div class="total-row">
+            <div>TOTAL HOURS WORKED:</div>
+            <div><span id="pTotalHours">0.00</span> Hours</div>
+          </div>
+
+          <div class="notes-print">
+            <div></div>
+            <div class="notes-box">
+              <strong>NOTES</strong><br>
+              <span id="pNotes"></span><br>
+              <span id="pCertification"></span>
+            </div>
+          </div>
+
+          <div class="signature-print">
+            <div class="sigline">Signature</div>
+            <div class="sigline">Date: <span id="pPreparedDate"></span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = "workHoursServicesLog_v1";
+
+function todayLocal(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function openTab(tabId, btn){
+  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+  document.getElementById(tabId).classList.add("active");
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  if(tabId === "summaryTab") updateSummary();
+  if(tabId === "printTab") preparePrint();
+}
+
+function openTabById(tabId){
+  const btns = [...document.querySelectorAll(".tab-btn")];
+  const match = btns.find(b => b.textContent.toLowerCase().includes(
+    tabId.replace("Tab","").toLowerCase()
+  ));
+  openTab(tabId, match || null);
+}
+
+function formatDate(dateStr){
+  if(!dateStr) return "";
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"});
+}
+
+function formatTime(t){
+  if(!t) return "";
+  let [h,m] = t.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if(h === 0) h = 12;
+  return `${h}:${String(m).padStart(2,"0")} ${suffix}`;
+}
+
+function cleanNumber(v){
+  const n = Number(v || 0);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function calculateHours(start, end, nextDay, breakMin){
+  if(!start || !end) return 0;
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let startM = sh * 60 + sm;
+  let endM = eh * 60 + em;
+  if(nextDay || endM < startM) endM += 24 * 60;
+  let mins = endM - startM - cleanNumber(breakMin);
+  if(mins < 0) mins = 0;
+  return mins / 60;
+}
+
+function entryTemplate(data = {}){
+  const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+  const div = document.createElement("div");
+  div.className = "entry-card";
+  div.dataset.id = id;
+  div.innerHTML = `
+    <div class="entry-head">
+      <strong>Work Day Entry</strong>
+      <button class="mini danger" onclick="deleteEntry(this)">Delete</button>
+    </div>
+    <div class="grid-3">
+      <div>
+        <label>Date</label>
+        <input type="date" class="e-date" value="${data.date || ""}">
+      </div>
+      <div>
+        <label>Start Time</label>
+        <input type="time" class="e-start" value="${data.start || ""}">
+      </div>
+      <div>
+        <label>End Time</label>
+        <input type="time" class="e-end" value="${data.end || ""}">
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="checkline">
+        <input type="checkbox" class="e-next" ${data.nextDay ? "checked" : ""}>
+        <span>Ends next day</span>
+      </div>
+      <div>
+        <label>Break Minutes</label>
+        <input type="number" class="e-break" min="0" step="1" value="${data.breakMin || 0}">
+      </div>
+      <div>
+        <label>Calculated Hours</label>
+        <div class="calculated"><span class="e-hours">0.00</span> Hours</div>
+      </div>
+    </div>
+    <div class="e-warn no-print" style="display:none;margin:2px 0 10px;background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;padding:8px 10px;border-radius:10px;font-size:.82rem;font-weight:700"></div>
+    <div>
+      <label>Work Performed</label>
+      <textarea class="e-work" placeholder="Describe the work performed, services, tasks, locations, and important details.">${data.work || ""}</textarea>
+    </div>
+  `;
+  div.querySelectorAll("input, textarea").forEach(el => {
+    el.addEventListener("input", () => {
+      updateEntryHours(div);
+      updateSummary();
+      saveData(false);
+    });
+    el.addEventListener("change", () => {
+      updateEntryHours(div);
+      updateSummary();
+      saveData(false);
+    });
+  });
+  return div;
+}
+
+function updateEntryHours(card){
+  const start = card.querySelector(".e-start").value;
+  const end = card.querySelector(".e-end").value;
+  const nextDay = card.querySelector(".e-next").checked;
+  const breakMin = card.querySelector(".e-break").value;
+  const hours = calculateHours(start, end, nextDay, breakMin);
+  card.querySelector(".e-hours").textContent = hours.toFixed(2);
+  const warn = card.querySelector(".e-warn");
+  if(warn){
+    let show = false;
+    if(start && end && !nextDay){
+      const [sh,sm] = start.split(":").map(Number);
+      const [eh,em] = end.split(":").map(Number);
+      if((eh*60+em) < (sh*60+sm)) show = true;
+    }
+    if(show){
+      warn.style.display = "block";
+      warn.textContent = "\u26a0\ufe0f End time is before start time. If this is an overnight shift, check \u201cEnds next day\u201d. If not, review the times \u2014 this is being counted as " + hours.toFixed(2) + " hours.";
+    } else {
+      warn.style.display = "none";
+    }
+  }
+}
+
+function addEntry(data = {}){
+  const today = todayLocal();
+  if(!data.date) data.date = today;
+  const card = entryTemplate(data);
+  document.getElementById("entries").appendChild(card);
+  updateEntryHours(card);
+  updateSummary();
+  saveData(false);
+}
+
+function deleteEntry(btn){
+  btn.closest(".entry-card").remove();
+  updateSummary();
+  saveData(false);
+}
+
+function duplicateLastEntry(){
+  const entries = getEntries();
+  if(!entries.length){
+    addEntry();
+    return;
+  }
+  const last = entries[entries.length - 1];
+  addEntry({
+    date: last.date,
+    start: last.start,
+    end: last.end,
+    nextDay: last.nextDay,
+    breakMin: last.breakMin,
+    work: last.work
+  });
+}
+
+function getEntries(){
+  return [...document.querySelectorAll(".entry-card")].map(card => {
+    const start = card.querySelector(".e-start").value;
+    const end = card.querySelector(".e-end").value;
+    const nextDay = card.querySelector(".e-next").checked;
+    const breakMin = card.querySelector(".e-break").value;
+    return {
+      date: card.querySelector(".e-date").value,
+      start,
+      end,
+      nextDay,
+      breakMin,
+      hours: calculateHours(start, end, nextDay, breakMin),
+      work: card.querySelector(".e-work").value
+    };
+  });
+}
+
+function getData(){
+  return {
+    workerName: document.getElementById("workerName").value,
+    clientName: document.getElementById("clientName").value,
+    periodFrom: document.getElementById("periodFrom").value,
+    periodTo: document.getElementById("periodTo").value,
+    logNumber: document.getElementById("logNumber").value,
+    preparedDate: document.getElementById("preparedDate").value,
+    generalNotes: document.getElementById("generalNotes").value,
+    certificationText: document.getElementById("certificationText").value,
+    entries: getEntries()
+  };
+}
+
+function saveData(showMsg){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+  if(showMsg) alert("Work log saved on this device.");
+}
+
+function loadData(){
+  const today = todayLocal();
+  const saved = localStorage.getItem(STORAGE_KEY);
+
+  if(saved){
+    try{
+      const data = JSON.parse(saved);
+      document.getElementById("workerName").value = data.workerName || "";
+      document.getElementById("clientName").value = data.clientName || "";
+      document.getElementById("periodFrom").value = data.periodFrom || today;
+      document.getElementById("periodTo").value = data.periodTo || today;
+      document.getElementById("logNumber").value = data.logNumber || "";
+      document.getElementById("preparedDate").value = data.preparedDate || today;
+      document.getElementById("generalNotes").value = data.generalNotes || "";
+      document.getElementById("certificationText").value = data.certificationText || "I certify that the information contained in this record is accurate and reflects the services provided during the period indicated.";
+      document.getElementById("entries").innerHTML = "";
+      (data.entries && data.entries.length ? data.entries : [{}]).forEach(addEntry);
+    }catch(e){
+      setDefaults(today);
+    }
+  }else{
+    setDefaults(today);
+  }
+
+  document.querySelectorAll("#workerName,#clientName,#periodFrom,#periodTo,#logNumber,#preparedDate,#generalNotes,#certificationText").forEach(el => {
+    el.addEventListener("input", () => {
+      updateSummary();
+      saveData(false);
+    });
+    el.addEventListener("change", () => {
+      updateSummary();
+      saveData(false);
+    });
+  });
+
+  updateSummary();
+  preparePrint();
+}
+
+function setDefaults(today){
+  document.getElementById("periodFrom").value = today;
+  document.getElementById("periodTo").value = today;
+  document.getElementById("preparedDate").value = today;
+  document.getElementById("certificationText").value = "I certify that the information contained in this record is accurate and reflects the services provided during the period indicated.";
+  document.getElementById("entries").innerHTML = "";
+  addEntry({date:today});
+}
+
+function updateSummary(){
+  const entries = getEntries();
+  const filledEntries = entries.filter(e => e.date || e.start || e.end || e.work || e.hours);
+  const totalHours = entries.reduce((sum,e) => sum + e.hours, 0);
+  document.getElementById("summaryDays").textContent = filledEntries.length;
+  document.getElementById("summaryHours").textContent = totalHours.toFixed(2);
+  const from = formatDate(document.getElementById("periodFrom").value);
+  const to = formatDate(document.getElementById("periodTo").value);
+  document.getElementById("summaryPeriod").textContent = from && to ? `${from} \u2013 ${to}` : "\u2014";
+}
+
+function preparePrint(){
+  updateSummary();
+  const data = getData();
+  const totalHours = data.entries.reduce((sum,e) => sum + e.hours, 0);
+
+  document.getElementById("pName").textContent = data.workerName || "";
+  document.getElementById("pClient").textContent = data.clientName || "";
+  const from = formatDate(data.periodFrom);
+  const to = formatDate(data.periodTo);
+  document.getElementById("pPeriod").textContent = from && to ? `${from} through ${to}` : "";
+  document.getElementById("pLogNumber").textContent = data.logNumber || "";
+  document.getElementById("pTotalHours").textContent = totalHours.toFixed(2);
+  document.getElementById("pPreparedDate").textContent = formatDate(data.preparedDate);
+  document.getElementById("pNotes").textContent = data.generalNotes || "";
+  document.getElementById("pCertification").textContent = data.certificationText || "";
+
+  const tbody = document.getElementById("printRows");
+  tbody.innerHTML = "";
+
+  const entries = data.entries.filter(e => e.date || e.start || e.end || e.work || e.hours);
+  entries.forEach(e => {
+    const tr = document.createElement("tr");
+    const endLabel = e.nextDay ? `${formatTime(e.end)}*` : formatTime(e.end);
+    tr.innerHTML = `
+      <td class="date-col">${formatDate(e.date)}</td>
+      <td class="time-col">${formatTime(e.start)}</td>
+      <td class="time-col">${endLabel}</td>
+      <td class="hours-col">${e.hours.toFixed(2)}</td>
+      <td class="work-col">${(e.work || "").replace(/\n/g, "<br>")}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const anyNextDay = entries.some(e => e.nextDay || (e.start && e.end && e.end < e.start));
+  if(anyNextDay){
+    const existing = document.getElementById("nextDayFootnote");
+    if(existing) existing.remove();
+    const foot = document.createElement("div");
+    foot.id = "nextDayFootnote";
+    foot.style.marginTop = "8px";
+    foot.style.fontSize = ".85rem";
+    foot.innerHTML = "* Shift extended into the following day.";
+    document.querySelector(".total-row").after(foot);
+  }else{
+    const existing = document.getElementById("nextDayFootnote");
+    if(existing) existing.remove();
+  }
+}
+
+function printLog(){
+  preparePrint();
+  openTabById("printTab");
+  setTimeout(() => window.print(), 150);
+}
+
+function newLog(){
+  if(!confirm("Create a new log? The current screen will be cleared. Print or save as PDF first if needed.")) return;
+  const name = document.getElementById("workerName").value;
+  const today = todayLocal();
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById("workerName").value = name || "";
+  document.getElementById("clientName").value = "";
+  document.getElementById("periodFrom").value = today;
+  document.getElementById("periodTo").value = today;
+  document.getElementById("logNumber").value = "";
+  document.getElementById("preparedDate").value = today;
+  document.getElementById("generalNotes").value = "";
+  document.getElementById("certificationText").value = "I certify that the information contained in this record is accurate and reflects the services provided during the period indicated.";
+  document.getElementById("entries").innerHTML = "";
+  addEntry({date:today});
+  updateSummary();
+  preparePrint();
+  saveData(false);
+}
+
+function clearAll(){
+  if(!confirm("This will delete all saved work log data from this device. Are you sure?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+function exportBackup(){
+  try{
+    const data = JSON.stringify(getData(), null, 2);
+    const blob = new Blob([data], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const base = (document.getElementById("workerName").value || "work-log").replace(/[^a-z0-9]+/gi,"_");
+    a.href = url;
+    a.download = base + "_backup.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }catch(e){ alert("Could not create the backup file."); }
+}
+
+function importBackup(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data !== "object" || !("entries" in data)) throw new Error("bad");
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      alert("Backup imported. Reloading...");
+      location.reload();
+    }catch(err){ alert("Could not read that file. Make sure it is a Work Log backup (JSON)."); }
+  };
+  reader.onerror = () => alert("Could not read the file.");
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
