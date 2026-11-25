@@ -220,7 +220,7 @@
       <section id="entriesTab" class="tab">
         <div class="section-title">
           <span>Work Day Entries</span>
-          <span class="hint">Hours are calculated from start and end time.</span>
+          <span class="hint">Entries are sorted by date. Hours are calculated from start and end time.</span>
         </div>
         <div id="entries"></div>
         <div class="btns">
@@ -439,6 +439,7 @@ function entryTemplate(data = {}){
       saveData(false);
     });
     el.addEventListener("change", () => {
+      if(el.classList.contains("e-date")) sortEntryCards();
       updateEntryHours(div);
       updateSummary();
       saveData(false);
@@ -471,12 +472,26 @@ function updateEntryHours(card){
   }
 }
 
+function sortEntryCards(){
+  const container = document.getElementById("entries");
+  const cards = [...container.querySelectorAll(".entry-card")];
+  cards.sort((a, b) => {
+    const dateA = a.querySelector(".e-date").value;
+    const dateB = b.querySelector(".e-date").value;
+    if(!dateA) return dateB ? 1 : 0;
+    if(!dateB) return -1;
+    return dateA.localeCompare(dateB);
+  });
+  cards.forEach(card => container.appendChild(card));
+}
+
 function addEntry(data = {}){
   const today = todayLocal();
   if(!data.date) data.date = today;
   const card = entryTemplate(data);
   document.getElementById("entries").appendChild(card);
   updateEntryHours(card);
+  sortEntryCards();
   updateSummary();
   saveData(false);
 }
@@ -619,7 +634,9 @@ function preparePrint(){
   const tbody = document.getElementById("printRows");
   tbody.innerHTML = "";
 
-  const entries = data.entries.filter(e => e.date || e.start || e.end || e.work || e.hours);
+  const entries = data.entries
+    .filter(e => e.date || e.start || e.end || e.work || e.hours)
+    .sort((a, b) => (a.date || "9999-99-99").localeCompare(b.date || "9999-99-99"));
   entries.forEach(e => {
     const tr = document.createElement("tr");
     const endLabel = e.nextDay ? `${formatTime(e.end)}*` : formatTime(e.end);
