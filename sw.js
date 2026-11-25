@@ -1,4 +1,4 @@
-const CACHE_NAME = "work-hours-services-log-v1";
+const CACHE_NAME = "work-hours-services-log-v2";
 const FILES = ["./", "index.html", "manifest.json", "icon.svg"];
 
 self.addEventListener("install", event => {
